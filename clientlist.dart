@@ -5,13 +5,18 @@ import 'package:makatrading/main.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:makatrading/createclient.dart';
+import 'package:makatrading/editprofile.dart';
+import 'package:makatrading/clientlist.dart'; // Make sure to import the page where you view clients
+import 'package:makatrading/editprofile.dart'; // Make sure to import the page where you edit clients
 
+// ... Rest of your imports
 class ClientListPage extends StatefulWidget {
   @override
   _ClientListPageState createState() => _ClientListPageState();
 }
 
 class _ClientListPageState extends State<ClientListPage> {
+  // ... Rest of your variables
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final ScrollController _scrollController = ScrollController();
@@ -55,8 +60,7 @@ class _ClientListPageState extends State<ClientListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Row(
-        children: [
+      body: Row(children: [
           Container(
             width: 200,
             color: Colors.blue,
@@ -149,92 +153,99 @@ class _ClientListPageState extends State<ClientListPage> {
                       ],
                     ),
                   ),
-                  _loadingClients
-                      ? Center(child: CircularProgressIndicator())
-                      : ListView.builder(
-                          physics: NeverScrollableScrollPhysics(),
-                          shrinkWrap: true,
-                          itemCount: _clients.length,
-                          itemBuilder: (context, index) {
-                            final client =
-                                _clients[index].data() as Map<String, dynamic>;
-                            return ListTile(
-                              title: Text(client['name']),
-                              subtitle: Text(client['email']),
-                              trailing: PopupMenuButton<String>(
-                                itemBuilder: (context) => [
-                                  PopupMenuItem(
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.visibility),
-                                        Text('View Client'),
-                                      ],
-                                    ),
-                                  ),
-                                  PopupMenuItem(
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.edit),
-                                        Text('Edit Client'),
-                                      ],
-                                    ),
-                                  ),
-                                  PopupMenuItem(
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.delete),
-                                        Text('Delete Client'),
-                                      ],
-                                    ),
-                                    value: 'delete',
-                                  ),
-                                ],
-                                onSelected: (value) {
-                                  if (value == 'delete') {
-                                    showDialog(
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        return AlertDialog(
-                                          title: Text('Confirm Delete'),
-                                          content: Text('Are you sure?'),
-                                          actions: <Widget>[
-                                            TextButton(
-                                              onPressed: () {
-                                                Navigator.of(context).pop();
-                                                // Add your delete function here
-                                              },
-                                              child: Text('Yes'),
-                                            ),
-                                            TextButton(
-                                              onPressed: () {
-                                                Navigator.of(context).pop();
-                                              },
-                                              child: Text('No'),
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    );
-                                  }
-                                },
-                                icon: Icon(Icons.more_vert),
-                              ),
-                            );
-                          },
-                        ),
-                  if (!_allClientsLoaded)
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: CircularProgressIndicator(),
-                      ),
-                    ),
                 ],
               ),
             ),
           ),
         ],
       ),
-    );
+        // ... Rest of your widget tree
+
+        // Add this where you want to display your clients
+        ListView.builder(
+          itemCount: _clients.length,
+          itemBuilder: (context, index) {
+            final client = _clients[index];
+            return ListTile(
+              title: Text(client['name']), // Adjust this line according to your client data structure
+              trailing: PopupMenuButton<String>(
+                itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                  PopupMenuItem<String>(
+                    value: 'view',
+                    child: Row(
+                      children: [
+                        Icon(Icons.visibility),
+                        Text('View Client'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem<String>(
+                    value: 'edit',
+                    child: Row(
+                      children: [
+                        Icon(Icons.edit),
+                        Text('Edit Client'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem<String>(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        Icon(Icons.delete),
+                        Text('Delete Client'),
+                      ],
+                    ),
+                  ),
+                ],
+                onSelected: (value) {
+                  if (value == 'delete') {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: Text('Confirm Delete'),
+                          content: Text('Are you sure?'),
+                          actions: <Widget>[
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                // Add your delete function here
+                              },
+                              child: Text('Yes'),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: Text('No'),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  } else if (value == 'view') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditProfilePage(client: client), // Pass the client to ViewClientPage
+                      ),
+                    );
+                  } else if (value == 'edit') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditProfilePage(client: client), // Pass the client to EditClientPage
+                      ),
+                    );
+                  }
+                },
+              ),
+            );
+          },
+        ),
+      ),
+    
   }
 }
+
