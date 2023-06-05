@@ -2,9 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:makatrading/signin.dart';
+import 'package:makatrading/clientlist.dart';
+import 'package:makatrading/profitlog.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: FirebaseOptions(
+        apiKey: "AIzaSyBsxsUhI8FppeeITHAE4TvzB2HFN8A3Kvc",
+        authDomain: "makatrade.firebaseapp.com",
+        databaseURL:
+            "https://makatrade-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "makatrade",
+        storageBucket: "makatrade.appspot.com",
+        messagingSenderId: "504475759309",
+        appId: "1:504475759309:web:6b6f6834a24715ca1b6f84",
+        measurementId: "G-T9Q2YXH6ZW"),
+  );
+
   runApp(App());
 }
 
@@ -40,6 +56,8 @@ class MyApp extends StatelessWidget {
 }
 
 class DashboardPage extends StatelessWidget {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,25 +65,70 @@ class DashboardPage extends StatelessWidget {
         children: [
           Container(
             width: 200,
-            color: Colors.blue,
+            color: Colors.white,
             child: Column(
               children: [
                 Image.asset('assets/images/makatradinglogo.jpeg'),
-                Text('MakaTrade'),
+                SizedBox(height: 10),
                 ElevatedButton(
-                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.white,
+                    onPrimary: Colors.black,
+                    side: BorderSide(color: Colors.blue, width: 2),
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => DashboardPage()),
+                    );
+                  },
                   child: Text('Dashboard'),
                 ),
+                SizedBox(height: 10),
                 ElevatedButton(
-                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.white,
+                    onPrimary: Colors.black,
+                    side: BorderSide(color: Colors.blue, width: 2),
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ClientListPage()),
+                    );
+                  },
                   child: Text('Clients'),
                 ),
+                SizedBox(height: 10),
                 ElevatedButton(
-                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.white,
+                    onPrimary: Colors.black,
+                    side: BorderSide(color: Colors.blue, width: 2),
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => InternalProfitLogPage()),
+                    );
+                  },
                   child: Text('Internal Profit Log'),
                 ),
+                SizedBox(height: 10),
                 ElevatedButton(
-                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.white,
+                    onPrimary: Colors.black,
+                    side: BorderSide(color: Colors.blue, width: 2),
+                  ),
+                  onPressed: () async {
+                    await _auth.signOut();
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => SignInCMS()),
+                    );
+                  },
                   child: Text('Logout'),
                 ),
               ],
@@ -73,41 +136,45 @@ class DashboardPage extends StatelessWidget {
           ),
           Expanded(
             child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  Text(
-                    'Dashboard',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  Card(
-                    color: Color(0xFFF0F4FF),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Text(
-                        '20 Total Clients',
-                        style: TextStyle(fontSize: 18),
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    Text(
+                      'Dashboard',
+                      style:
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                    Card(
+                      color: Color(0xFFF0F4FF),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text(
+                          '20 Total Clients',
+                          style: TextStyle(fontSize: 18),
+                        ),
                       ),
                     ),
-                  ),
-                  SfCartesianChart(
-                    primaryXAxis: CategoryAxis(),
-                    title: ChartTitle(text: 'Total Clients'),
-                    series: <ChartSeries>[
-                      SplineSeries<Data, String>(
-                        dataSource: [
-                          Data('Jan', 35),
-                          Data('Feb', 28),
-                          Data('Mar', 34),
-                          Data('Apr', 32),
-                          Data('May', 40),
-                          Data('Jun', 45),
-                        ],
-                        xValueMapper: (Data data, _) => data.month,
-                        yValueMapper: (Data data, _) => data.value,
-                      ),
-                    ],
-                  ),
-                ],
+                    SfCartesianChart(
+                      primaryXAxis: CategoryAxis(),
+                      title: ChartTitle(text: 'Total Clients'),
+                      series: <ChartSeries>[
+                        SplineSeries<Data, String>(
+                          dataSource: [
+                            Data('Jan', 35),
+                            Data('Feb', 28),
+                            Data('Mar', 34),
+                            Data('Apr', 32),
+                            Data('May', 40),
+                            Data('Jun', 45),
+                          ],
+                          xValueMapper: (Data data, _) => data.month,
+                          yValueMapper: (Data data, _) => data.value,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

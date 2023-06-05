@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:makatrading/main.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:makatrading/clientlist.dart';
 
 class InternalProfitLogPage extends StatelessWidget {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -13,20 +18,47 @@ class InternalProfitLogPage extends StatelessWidget {
               children: [
                 Image.asset('assets/images/makatradinglogo.jpeg'),
                 Text('MakaTrade'),
+                SizedBox(height: 10),
                 ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => DashboardPage()),
+                    );
+                  },
                   child: Text('Dashboard'),
                 ),
+                SizedBox(height: 10),
                 ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ClientListPage()),
+                    );
+                  },
                   child: Text('Clients'),
                 ),
+                SizedBox(height: 10),
                 ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => InternalProfitLogPage()),
+                    );
+                  },
                   child: Text('Internal Profit Log'),
                 ),
+                SizedBox(height: 10),
                 ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () async {
+                    await _auth.signOut();
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => InternalProfitLogPage()),
+                    );
+                  },
                   child: Text('Logout'),
                 ),
               ],

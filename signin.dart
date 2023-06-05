@@ -1,6 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:makatrading/main.dart';
+
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(App());
+}
+
+class App extends StatelessWidget {
+  final Future<FirebaseApp> _initialization = Firebase.initializeApp();
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: _initialization,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          return MyApp();
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text('Error initializing Firebase'));
+        }
+        return Center(child: CircularProgressIndicator());
+      },
+    );
+  }
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Maka Trading',
+      theme: ThemeData.light(),
+      home: SignInCMS(),
+    );
+  }
+}
 
 class SignInCMS extends StatefulWidget {
   @override
@@ -53,7 +90,11 @@ class _SignInCMSState extends State<SignInCMS> {
                       email: _emailController.text,
                       password: _passwordController.text,
                     );
-                    // No need to navigate as the LandingPage will handle the redirection
+                    // Navigate to DashboardPage after successful sign in
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => DashboardPage()),
+                    );
                   } catch (e) {
                     print(e);
                   }
