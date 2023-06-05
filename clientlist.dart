@@ -6,17 +6,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:makatrading/createclient.dart';
 import 'package:makatrading/editprofile.dart';
-import 'package:makatrading/clientlist.dart'; // Make sure to import the page where you view clients
-import 'package:makatrading/editprofile.dart'; // Make sure to import the page where you edit clients
+import 'package:makatrading/signin.dart';
 
-// ... Rest of your imports
 class ClientListPage extends StatefulWidget {
   @override
   _ClientListPageState createState() => _ClientListPageState();
 }
 
 class _ClientListPageState extends State<ClientListPage> {
-  // ... Rest of your variables
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final ScrollController _scrollController = ScrollController();
@@ -60,15 +57,26 @@ class _ClientListPageState extends State<ClientListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Row(children: [
+      appBar: AppBar(
+        title: Text('Client List'),
+      ),
+      body: Row(
+        children: [
           Container(
             width: 200,
-            color: Colors.blue,
+            color: Colors.white,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                SizedBox(height: 10),
                 Image.asset('assets/images/makatradinglogo.jpeg'),
                 SizedBox(height: 10),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.white,
+                    onPrimary: Colors.black,
+                    side: BorderSide(color: Colors.blue, width: 2),
+                  ),
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -79,6 +87,11 @@ class _ClientListPageState extends State<ClientListPage> {
                 ),
                 SizedBox(height: 10),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.white,
+                    onPrimary: Colors.black,
+                    side: BorderSide(color: Colors.blue, width: 2),
+                  ),
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -89,6 +102,11 @@ class _ClientListPageState extends State<ClientListPage> {
                 ),
                 SizedBox(height: 10),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.white,
+                    onPrimary: Colors.black,
+                    side: BorderSide(color: Colors.blue, width: 2),
+                  ),
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -100,12 +118,16 @@ class _ClientListPageState extends State<ClientListPage> {
                 ),
                 SizedBox(height: 10),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.white,
+                    onPrimary: Colors.black,
+                    side: BorderSide(color: Colors.blue, width: 2),
+                  ),
                   onPressed: () async {
                     await _auth.signOut();
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(
-                          builder: (context) => InternalProfitLogPage()),
+                      MaterialPageRoute(builder: (context) => SignInCMS()),
                     );
                   },
                   child: Text('Logout'),
@@ -130,11 +152,7 @@ class _ClientListPageState extends State<ClientListPage> {
                         ),
                         FloatingActionButton(
                           onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => SignUpPage()),
-                            );
+                            // Handle add client action
                           },
                           child: Icon(Icons.add),
                           backgroundColor: Color(0xFF091740),
@@ -153,99 +171,102 @@ class _ClientListPageState extends State<ClientListPage> {
                       ],
                     ),
                   ),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: _clients.length,
+                    itemBuilder: (context, index) {
+                      final client = _clients[index];
+                      return ListTile(
+                        title: Text(client[
+                            'name']), // Replace with your client data structure
+                        trailing: PopupMenuButton<String>(
+                          itemBuilder: (BuildContext context) =>
+                              <PopupMenuEntry<String>>[
+                            PopupMenuItem<String>(
+                              value: 'view',
+                              child: ListTile(
+                                leading: Icon(Icons.visibility),
+                                title: Text('View Client'),
+                              ),
+                            ),
+                            PopupMenuItem<String>(
+                              value: 'edit',
+                              child: ListTile(
+                                leading: Icon(Icons.edit),
+                                title: Text('Edit Client'),
+                              ),
+                            ),
+                            PopupMenuItem<String>(
+                              value: 'delete',
+                              child: ListTile(
+                                leading: Icon(Icons.delete),
+                                title: Text('Delete Client'),
+                              ),
+                            ),
+                          ],
+                          onSelected: (String value) {
+                            if (value == 'delete') {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: Text('Confirm Delete'),
+                                    content: Text('Are you sure?'),
+                                    actions: <Widget>[
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                          // Add your delete function here
+                                        },
+                                        child: Text('Yes'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: Text('No'),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            } else if (value == 'view' || value == 'edit') {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => EditProfilePage(client),
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
           ),
         ],
       ),
-        // ... Rest of your widget tree
-
-        // Add this where you want to display your clients
-        ListView.builder(
-          itemCount: _clients.length,
-          itemBuilder: (context, index) {
-            final client = _clients[index];
-            return ListTile(
-              title: Text(client['name']), // Adjust this line according to your client data structure
-              trailing: PopupMenuButton<String>(
-                itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                  PopupMenuItem<String>(
-                    value: 'view',
-                    child: Row(
-                      children: [
-                        Icon(Icons.visibility),
-                        Text('View Client'),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem<String>(
-                    value: 'edit',
-                    child: Row(
-                      children: [
-                        Icon(Icons.edit),
-                        Text('Edit Client'),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem<String>(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        Icon(Icons.delete),
-                        Text('Delete Client'),
-                      ],
-                    ),
-                  ),
-                ],
-                onSelected: (value) {
-                  if (value == 'delete') {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: Text('Confirm Delete'),
-                          content: Text('Are you sure?'),
-                          actions: <Widget>[
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                                // Add your delete function here
-                              },
-                              child: Text('Yes'),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                              child: Text('No'),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  } else if (value == 'view') {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => EditProfilePage(client: client), // Pass the client to ViewClientPage
-                      ),
-                    );
-                  } else if (value == 'edit') {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => EditProfilePage(client: client), // Pass the client to EditClientPage
-                      ),
-                    );
-                  }
-                },
-              ),
-            );
-          },
-        ),
-      ),
-    
+    );
   }
 }
 
+class EditProfilePage extends StatelessWidget {
+  final DocumentSnapshot client;
+
+  EditProfilePage(this.client);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Edit Profile'),
+      ),
+      body: Center(
+        child: Text('Edit Profile Page for ${client['name']}'),
+      ),
+    );
+  }
+}

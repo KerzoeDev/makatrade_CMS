@@ -2,8 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:makatrading/clientlist.dart' as ClientListPage;
+import 'package:makatrading/main.dart';
+import 'package:makatrading/profitlog.dart';
+import 'package:makatrading/signin.dart';
 
 class EditProfilePage extends StatefulWidget {
+  final DocumentSnapshot client;
+
+  EditProfilePage({required this.client});
+
   @override
   _EditProfilePageState createState() => _EditProfilePageState();
 }
@@ -11,6 +19,14 @@ class EditProfilePage extends StatefulWidget {
 class _EditProfilePageState extends State<EditProfilePage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  late String name;
+  late String email;
+  late String phoneNumber;
+  late int totalReferrals;
+  late String verificationStatus;
+  late double growthPercentage;
+  late String package;
 
   DateTime? _paymentDate;
   double? _paymentAmount;
@@ -21,6 +37,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
   double? _withdrawalAmount;
   String? _profitDate;
   double? _profitAmount;
+
+  @override
+  void initState() {
+    super.initState();
+    name = widget.client['name'];
+    email = widget.client['email'];
+    phoneNumber = widget.client['phoneNumber'];
+    totalReferrals = widget.client['totalReferrals'];
+    verificationStatus = widget.client['verificationStatus'];
+    growthPercentage = widget.client['growthPercentage'];
+    package = widget.client['package'];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,19 +69,49 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     Image.asset('assets/images/makatradinglogo.jpeg'),
                     Text('MakaTrade'),
                     ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => DashboardPage(),
+                          ),
+                        );
+                      },
                       child: Text('Dashboard'),
                     ),
                     ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                ClientListPage.ClientListPage(),
+                          ),
+                        );
+                      },
                       child: Text('Clients'),
                     ),
                     ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => InternalProfitLogPage(),
+                          ),
+                        );
+                      },
                       child: Text('Internal Profit Log'),
                     ),
                     ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () async {
+                        await _auth.signOut();
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SignInCMS(),
+                          ),
+                        );
+                      },
                       child: Text('Logout'),
                     ),
                   ],
@@ -72,165 +130,56 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         decoration: InputDecoration(
                           labelText: 'Full Name',
                         ),
+                        controller: TextEditingController(
+                          text: name,
+                        ),
                       ),
                       TextField(
                         decoration: InputDecoration(
                           labelText: 'Email',
                         ),
-                      ),
-                      TextField(
-                        decoration: InputDecoration(
-                          labelText: 'Password',
+                        controller: TextEditingController(
+                          text: email,
                         ),
-                        obscureText: true,
                       ),
                       TextField(
                         decoration: InputDecoration(
                           labelText: 'Phone Number',
+                        ),
+                        controller: TextEditingController(
+                          text: phoneNumber,
                         ),
                       ),
                       TextField(
                         decoration: InputDecoration(
                           labelText: 'Verification Status',
                         ),
+                        controller: TextEditingController(
+                          text: verificationStatus,
+                        ),
                       ),
                       TextField(
                         decoration: InputDecoration(
                           labelText: 'Total Referrals',
                         ),
-                      ),
-                      TextField(
-                        decoration: InputDecoration(
-                          labelText: 'Growth %',
+                        controller: TextEditingController(
+                          text: totalReferrals.toString(),
                         ),
                       ),
                       TextField(
                         decoration: InputDecoration(
-                          labelText: 'Package',
+                          labelText: 'Growth % and Package',
+                        ),
+                        controller: TextEditingController(
+                          text: '$growthPercentage% - $package',
                         ),
                       ),
+                      SizedBox(height: 20),
                       ElevatedButton(
-                        onPressed: () {},
-                        child: Text('Save'),
-                      ),
-                      SizedBox(height: 16),
-                      Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            children: <Widget>[
-                              Text('Deposit', style: TextStyle(fontSize: 24)),
-                              // Add the relevant fields and button as per your requirements
-                              // Similar to the Affiliate Payments card
-                            ],
-                          ),
-                        ),
-                      ),
-                      Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            children: <Widget>[
-                              Text('Profit', style: TextStyle(fontSize: 24)),
-                              // Add the relevant fields and button as per your requirements
-                              // Similar to the Affiliate Payments card
-                            ],
-                          ),
-                        ),
-                      ),
-                      Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            children: <Widget>[
-                              Text('Withdrawal',
-                                  style: TextStyle(fontSize: 24)),
-                              // Add the relevant fields and button as per your requirements
-                              // Similar to the Affiliate Payments card
-                            ],
-                          ),
-                        ),
-                      ),
-                      Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            children: <Widget>[
-                              Text('Affiliate Payments',
-                                  style: TextStyle(fontSize: 24)),
-                              TextField(
-                                decoration:
-                                    InputDecoration(labelText: 'Referred By'),
-                                onChanged: (value) {
-                                  _referredBy = value;
-                                },
-                              ),
-                              TextField(
-                                readOnly: true,
-                                decoration:
-                                    InputDecoration(labelText: 'Payment Date'),
-                                onTap: () async {
-                                  _paymentDate = await showDatePicker(
-                                    context: context,
-                                    initialDate: DateTime.now(),
-                                    firstDate: DateTime(2000),
-                                    lastDate: DateTime(2100),
-                                  );
-                                  setState(() {});
-                                },
-                                controller: TextEditingController(
-                                  text: _paymentDate != null
-                                      ? DateFormat('yyyy-MM-dd')
-                                          .format(_paymentDate!)
-                                      : '',
-                                ),
-                              ),
-                              TextField(
-                                decoration: InputDecoration(
-                                  labelText: 'Payment Amount',
-                                  prefixText: 'R',
-                                ),
-                                keyboardType: TextInputType.number,
-                                onChanged: (value) {
-                                  _paymentAmount = double.tryParse(value);
-                                },
-                              ),
-                              ElevatedButton(
-                                onPressed: () async {
-                                  // Save the affiliate payment to Firestore
-                                  User? user = _auth.currentUser;
-                                  if (user != null &&
-                                      _paymentDate != null &&
-                                      _paymentAmount != null &&
-                                      _referredBy != null &&
-                                      _depositDate != null &&
-                                      _depositAmount != null &&
-                                      _withdrawalDate != null &&
-                                      _withdrawalAmount != null &&
-                                      _profitDate != null &&
-                                      _profitAmount != null) {
-                                    await _firestore
-                                        .collection('users')
-                                        .doc(user.uid)
-                                        .collection('affiliatePayments')
-                                        .add({
-                                      'referredBy': _referredBy,
-                                      'paymentDate': _paymentDate,
-                                      'paymentAmount': _paymentAmount,
-                                      'depositDate': _depositDate,
-                                      'depositAmount': _depositAmount,
-                                      'withdrawalDate': _withdrawalDate,
-                                      'withdrawalAmount': _withdrawalAmount,
-                                      'profitDate': _profitDate,
-                                      'profitAmount': _profitAmount,
-                                    });
-                                  }
-                                },
-                                child: Text('Add to log'),
-                              ),
-                            ],
-                          ),
-                        ),
+                        onPressed: () {
+                          // TODO: Update Firestore here with new values.
+                        },
+                        child: Text('Save Changes'),
                       ),
                     ],
                   ),

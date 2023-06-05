@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:makatrading/signin.dart';
-import 'package:makatrading/clientlist.dart';
+import 'package:makatrading/clientlist.dart' as ClientListPage;
 import 'package:makatrading/profitlog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:makatrading/editprofile.dart' as EditProfilePage;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -94,7 +95,9 @@ class DashboardPage extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => ClientListPage()),
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              ClientListPage.ClientListPage()),
                     );
                   },
                   child: Text('Clients'),
