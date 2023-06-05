@@ -161,6 +161,64 @@ class _ClientListPageState extends State<ClientListPage> {
                             return ListTile(
                               title: Text(client['name']),
                               subtitle: Text(client['email']),
+                              trailing: PopupMenuButton<String>(
+                                itemBuilder: (context) => [
+                                  PopupMenuItem(
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.visibility),
+                                        Text('View Client'),
+                                      ],
+                                    ),
+                                  ),
+                                  PopupMenuItem(
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.edit),
+                                        Text('Edit Client'),
+                                      ],
+                                    ),
+                                  ),
+                                  PopupMenuItem(
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.delete),
+                                        Text('Delete Client'),
+                                      ],
+                                    ),
+                                    value: 'delete',
+                                  ),
+                                ],
+                                onSelected: (value) {
+                                  if (value == 'delete') {
+                                    showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          title: Text('Confirm Delete'),
+                                          content: Text('Are you sure?'),
+                                          actions: <Widget>[
+                                            TextButton(
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                                // Add your delete function here
+                                              },
+                                              child: Text('Yes'),
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                              },
+                                              child: Text('No'),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  }
+                                },
+                                icon: Icon(Icons.more_vert),
+                              ),
                             );
                           },
                         ),

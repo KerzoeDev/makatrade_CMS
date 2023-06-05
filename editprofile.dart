@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 
 class EditProfilePage extends StatelessWidget {
   @override
@@ -86,6 +90,151 @@ class EditProfilePage extends StatelessWidget {
                     child: Text('Save'),
                   ),
                 ],
+
+class EditProfilePage extends StatefulWidget {
+  @override
+  _EditProfilePageState createState() => _EditProfilePageState();
+}
+
+class _EditProfilePageState extends State<EditProfilePage> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  DateTime? _paymentDate;
+  double? _paymentAmount;
+  String? _referredBy;
+  String? _depositDate;
+  double? _depositAmount;
+  String? _withdrawalDate;
+  double? _withdrawalAmount;
+  String? _profitDate;
+  double? _profitAmount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Edit Profile'),
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: <Widget>[
+              // Deposit Card
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: <Widget>[
+                      Text('Deposit', style: TextStyle(fontSize: 24)),
+                      // Add the relevant fields and button as per your requirements
+                      // Similar to Affiliate Payments card
+                    ],
+                  ),
+                ),
+              ),
+              // Profit Card
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: <Widget>[
+                      Text('Profit', style: TextStyle(fontSize: 24)),
+                      // Add the relevant fields and button as per your requirements
+                      // Similar to Affiliate Payments card
+                    ],
+                  ),
+                ),
+              ),
+              // Withdrawal Card
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: <Widget>[
+                      Text('Withdrawal', style: TextStyle(fontSize: 24)),
+                      // Add the relevant fields and button as per your requirements
+                      // Similar to Affiliate Payments card
+                    ],
+                  ),
+                ),
+              ),
+              // Affiliate Payments Card
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: <Widget>[
+                      Text('Affiliate Payments',
+                          style: TextStyle(fontSize: 24)),
+                      TextField(
+                        decoration: InputDecoration(labelText: 'Referred By'),
+                        onChanged: (value) {
+                          _referredBy = value;
+                        },
+                      ),
+                      TextField(
+                        readOnly: true,
+                        decoration: InputDecoration(labelText: 'Payment Date'),
+                        onTap: () async {
+                          _paymentDate = await showDatePicker(
+                            context: context,
+                            initialDate: DateTime.now(),
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime(2100),
+                          );
+                          setState(() {});
+                        },
+                        controller: TextEditingController(
+                          text: _paymentDate != null
+                              ? DateFormat('yyyy-MM-dd').format(_paymentDate!)
+                              : '',
+                        ),
+                      ),
+                      TextField(
+                        decoration: InputDecoration(
+                          labelText: 'Payment Amount',
+                          prefixText: 'R',
+                        ),
+                        keyboardType: TextInputType.number,
+                        onChanged: (value) {
+                          _paymentAmount = double.tryParse(value);
+                        },
+                      ),
+                      ElevatedButton(
+                        onPressed: () async {
+                          // Save the affiliate payment to Firestore
+                          User? user = _auth.currentUser;
+                          if (user != null &&
+                              _paymentDate != null &&
+                              _paymentAmount != null &&
+                              _referredBy != null) {
+                            await _firestore
+                                .collection('users')
+                                .doc(user.uid)
+                                .collection('affiliatePayments')
+                                .add({
+                              'referredBy': _referredBy,
+                              'paymentDate': _paymentDate,
+                              'paymentAmount': _paymentAmount,
+                            });
+                          }
+                        },
+                        child: Text('Add to log'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
               ),
             ),
           ),
