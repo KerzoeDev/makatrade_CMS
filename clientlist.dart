@@ -231,10 +231,12 @@ class _ClientListPageState extends State<ClientListPage> {
                                 },
                               );
                             } else if (value == 'view' || value == 'edit') {
+                              print('Navigating to EditProfilePage...');
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => EditProfilePage(client),
+                                  builder: (context) =>
+                                      EditProfilePage(_clients[index]),
                                 ),
                               );
                             }
