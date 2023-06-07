@@ -57,11 +57,10 @@ class _ClientListPageState extends State<ClientListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Client List'),
-      ),
-      body: Row(
-        children: [
+        appBar: AppBar(
+          title: Text('Client List'),
+        ),
+        body: Row(children: [
           Container(
             width: 200,
             color: Colors.white,
@@ -111,7 +110,8 @@ class _ClientListPageState extends State<ClientListPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => InternalProfitLogPage()),
+                        builder: (context) => InternalProfitLogPage(),
+                      ),
                     );
                   },
                   child: Text('Internal Profit Log'),
@@ -136,139 +136,98 @@ class _ClientListPageState extends State<ClientListPage> {
             ),
           ),
           Expanded(
-            child: SingleChildScrollView(
-              controller: _scrollController,
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: _clients.length,
+              itemBuilder: (context, index) {
+                final client = _clients[index];
+                return Card(
+                  child: ListTile(
+                    title: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Client List',
+                          'Name: ${client['name']}',
                           style: TextStyle(
-                              fontSize: 24, fontWeight: FontWeight.bold),
+                              fontSize: 16, fontWeight: FontWeight.bold),
                         ),
-                        FloatingActionButton(
-                          onPressed: () {
-                            // Handle add client action
-                          },
-                          child: Icon(Icons.add),
-                          backgroundColor: Color(0xFF091740),
+                        Text(
+                          'Email: ${client['email']}',
+                          style: TextStyle(fontSize: 14),
                         ),
-                        Container(
-                          width: 200,
-                          child: TextField(
-                            decoration: InputDecoration(
-                              labelText: 'Search',
-                              prefixIcon: Icon(Icons.search),
-                              filled: true,
-                              fillColor: Colors.white,
-                            ),
-                          ),
+                        Text(
+                          'Phone: ${client['number']}',
+                          style: TextStyle(fontSize: 14),
                         ),
                       ],
                     ),
-                  ),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: _clients.length,
-                    itemBuilder: (context, index) {
-                      final client = _clients[index];
-                      return ListTile(
-                        title: Text(client[
-                            'name']), // Replace with your client data structure
-                        trailing: PopupMenuButton<String>(
-                          itemBuilder: (BuildContext context) =>
-                              <PopupMenuEntry<String>>[
-                            PopupMenuItem<String>(
-                              value: 'view',
-                              child: ListTile(
-                                leading: Icon(Icons.visibility),
-                                title: Text('View Client'),
-                              ),
-                            ),
-                            PopupMenuItem<String>(
-                              value: 'edit',
-                              child: ListTile(
-                                leading: Icon(Icons.edit),
-                                title: Text('Edit Client'),
-                              ),
-                            ),
-                            PopupMenuItem<String>(
-                              value: 'delete',
-                              child: ListTile(
-                                leading: Icon(Icons.delete),
-                                title: Text('Delete Client'),
-                              ),
-                            ),
-                          ],
-                          onSelected: (String value) {
-                            if (value == 'delete') {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return AlertDialog(
-                                    title: Text('Confirm Delete'),
-                                    content: Text('Are you sure?'),
-                                    actions: <Widget>[
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.of(context).pop();
-                                          // Add your delete function here
-                                        },
-                                        child: Text('Yes'),
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.of(context).pop();
-                                        },
-                                        child: Text('No'),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              );
-                            } else if (value == 'view' || value == 'edit') {
-                              print('Navigating to EditProfilePage...');
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      EditProfilePage(_clients[index]),
-                                ),
-                              );
-                            }
-                          },
+                    trailing: PopupMenuButton<String>(
+                      itemBuilder: (BuildContext context) =>
+                          <PopupMenuEntry<String>>[
+                        PopupMenuItem<String>(
+                          value: 'view',
+                          child: ListTile(
+                            leading: Icon(Icons.visibility),
+                            title: Text('View Client'),
+                          ),
                         ),
-                      );
-                    },
+                        PopupMenuItem<String>(
+                          value: 'edit',
+                          child: ListTile(
+                            leading: Icon(Icons.edit),
+                            title: Text('Edit Client'),
+                          ),
+                        ),
+                        PopupMenuItem<String>(
+                          value: 'delete',
+                          child: ListTile(
+                            leading: Icon(Icons.delete),
+                            title: Text('Delete Client'),
+                          ),
+                        ),
+                      ],
+                      onSelected: (String value) {
+                        if (value == 'delete') {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: Text('Confirm Delete'),
+                                content: Text('Are you sure?'),
+                                actions: <Widget>[
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                      // Add your delete function here
+                                    },
+                                    child: Text('Yes'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: Text('No'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        } else if (value == 'view' || value == 'edit') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  EditProfilePage(client: client),
+                            ),
+                          );
+                        }
+                      },
+                    ),
                   ),
-                ],
-              ),
+                );
+              },
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class EditProfilePage extends StatelessWidget {
-  final DocumentSnapshot client;
-
-  EditProfilePage(this.client);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Edit Profile'),
-      ),
-      body: Center(
-        child: Text('Edit Profile Page for ${client['name']}'),
-      ),
-    );
+        ]));
   }
 }

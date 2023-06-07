@@ -29,12 +29,28 @@ class App extends StatelessWidget {
 }
 
 class MyApp extends StatelessWidget {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Maka Trading',
       theme: ThemeData.light(),
-      home: SignInCMS(),
+      home: StreamBuilder<User?>(
+        stream: _auth.authStateChanges(),
+        builder: (BuildContext context, AsyncSnapshot<User?> snapshot) {
+          if (snapshot.connectionState == ConnectionState.active) {
+            User? user = snapshot.data;
+            if (user == null) {
+              return SignInCMS();
+            } else {
+              return DashboardPage();
+            }
+          } else {
+            return Center(child: CircularProgressIndicator());
+          }
+        },
+      ),
     );
   }
 }
@@ -86,17 +102,23 @@ class _SignInCMSState extends State<SignInCMS> {
               ElevatedButton(
                 onPressed: () async {
                   try {
-                    await _auth.signInWithEmailAndPassword(
+                    await _auth
+                        .signInWithEmailAndPassword(
                       email: _emailController.text,
                       password: _passwordController.text,
-                    );
-                    // Navigate to DashboardPage after successful sign in
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => DashboardPage()),
-                    );
+                    )
+                        .then((userCredential) {
+                      print('Signed in user: ${_auth.currentUser}');
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => DashboardPage()),
+                      );
+                    }).catchError((error) {
+                      print('Error signing in: $error');
+                    });
                   } catch (e) {
-                    print(e);
+                    print('Error in sign-in button: $e');
                   }
                 },
                 child: Text('Sign In'),
