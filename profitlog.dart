@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:makatrading/main.dart';
+import 'package:makatrading/main.dart' as DashboardPage;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:makatrading/clientlist.dart';
+import 'package:makatrading/clientlist.dart' as ClientListPage;
 import 'package:async/async.dart';
 import 'package:intl/intl.dart';
 
@@ -77,7 +77,8 @@ class _InternalProfitLogPageState extends State<InternalProfitLogPage> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => DashboardPage()),
+                      MaterialPageRoute(
+                          builder: (context) => DashboardPage.DashboardPage()),
                     );
                   },
                   child: Text('Dashboard'),
@@ -87,7 +88,9 @@ class _InternalProfitLogPageState extends State<InternalProfitLogPage> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => ClientListPage()),
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              ClientListPage.ClientListPage()),
                     );
                   },
                   child: Text('Clients'),

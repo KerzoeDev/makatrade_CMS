@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:makatrading/main.dart';
+import 'package:makatrading/main.dart' as DashboardPage;
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,7 +44,7 @@ class MyApp extends StatelessWidget {
             if (user == null) {
               return SignInCMS();
             } else {
-              return DashboardPage();
+              return DashboardPage.DashboardPage();
             }
           } else {
             return Center(child: CircularProgressIndicator());
@@ -112,7 +112,8 @@ class _SignInCMSState extends State<SignInCMS> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => DashboardPage()),
+                            builder: (context) =>
+                                DashboardPage.DashboardPage()),
                       );
                     }).catchError((error) {
                       print('Error signing in: $error');

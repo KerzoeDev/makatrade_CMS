@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:makatrading/clientlist.dart';
+import 'package:intl/intl.dart';
 
 class SignUpPage extends StatefulWidget {
   @override
@@ -49,6 +50,22 @@ class _SignUpPageState extends State<SignUpPage> {
             'number': _number,
             'email': _email,
             'referredBy': _referredBy,
+          });
+          // Increment the user count for the respective month
+          String currentMonth = DateFormat('MMMM').format(DateTime.now());
+          DocumentReference monthDocRef =
+              _firestore.collection('monthly_users').doc(currentMonth);
+
+          _firestore.runTransaction((transaction) async {
+            DocumentSnapshot monthDoc = await transaction.get(monthDocRef);
+
+            if (monthDoc.exists) {
+              int currentCount =
+                  (monthDoc.data() as Map<String, dynamic>?)?['count'] ?? 0;
+              transaction.update(monthDocRef, {'count': currentCount + 1});
+            } else {
+              transaction.set(monthDocRef, {'count': 1});
+            }
           });
 
           Navigator.pop(context, {
