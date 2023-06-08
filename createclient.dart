@@ -41,17 +41,20 @@ class _SignUpPageState extends State<SignUpPage> {
         User? user = userCredential.user;
 
         if (user != null) {
-          await _firestore.collection('users').doc(user.uid).set({
+          String userId = user.uid; // Generate the unique userId
+
+          await _firestore.collection('users').doc(userId).set({
+            'userId': userId, // Add the userId field
             'name': _name,
             'number': _number,
             'email': _email,
             'referredBy': _referredBy,
           });
 
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => ClientListPage()),
-          );
+          Navigator.pop(context, {
+            'success': true,
+            'name': _name, // Pass the client's name back to the ClientListPage
+          });
         }
       } catch (e) {
         ScaffoldMessenger.of(context)

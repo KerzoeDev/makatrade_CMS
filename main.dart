@@ -1,26 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
-import 'package:makatrading/signin.dart';
-import 'package:makatrading/clientlist.dart' as ClientListPage;
-import 'package:makatrading/profitlog.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:makatrading/editprofile.dart' as EditProfilePage;
+import 'package:intl/intl.dart';
+import 'package:makatrading/signin.dart' as SignInPage;
+import 'package:makatrading/clientlist.dart' as ClientListPage;
+import 'package:makatrading/profitlog.dart' as ProfitLogPage;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: FirebaseOptions(
-        apiKey: "AIzaSyBsxsUhI8FppeeITHAE4TvzB2HFN8A3Kvc",
-        authDomain: "makatrade.firebaseapp.com",
-        databaseURL:
-            "https://makatrade-default-rtdb.europe-west1.firebasedatabase.app",
-        projectId: "makatrade",
-        storageBucket: "makatrade.appspot.com",
-        messagingSenderId: "504475759309",
-        appId: "1:504475759309:web:6b6f6834a24715ca1b6f84",
-        measurementId: "G-T9Q2YXH6ZW"),
-  );
+
+  if (Firebase.apps.isEmpty) {
+    await Firebase.initializeApp(
+      options: FirebaseOptions(
+          apiKey: "AIzaSyBsxsUhI8FppeeITHAE4TvzB2HFN8A3Kvc",
+          authDomain: "makatrade.firebaseapp.com",
+          databaseURL:
+              "https://makatrade-default-rtdb.europe-west1.firebasedatabase.app",
+          projectId: "makatrade",
+          storageBucket: "makatrade.appspot.com",
+          messagingSenderId: "504475759309",
+          appId: "1:504475759309:web:6b6f6834a24715ca1b6f84",
+          measurementId: "G-T9Q2YXH6ZW"),
+    );
+  }
 
   runApp(App());
 }
@@ -51,13 +55,48 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Maka Trading',
       theme: ThemeData.light(),
-      home: SignInCMS(),
+      home: SignInPage.SignInCMS(),
     );
   }
 }
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends StatefulWidget {
+  @override
+  _DashboardPageState createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  List<Data> _chartData = [];
+  int _totalClients = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final usersSnapshot = await _firestore.collection('users').get();
+
+    setState(() {
+      _totalClients = usersSnapshot.docs.length;
+    });
+
+    final monthlyUsersSnapshot =
+        await _firestore.collection('monthly_users').get();
+
+    setState(() {
+      _chartData = monthlyUsersSnapshot.docs.map((doc) {
+        final month = doc.id;
+        final value = doc.data()['count'] ?? 0;
+
+        return Data(month, value);
+      }).toList();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,8 +135,8 @@ class DashboardPage extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) =>
-                              ClientListPage.ClientListPage()),
+                        builder: (context) => ClientListPage.ClientListPage(),
+                      ),
                     );
                   },
                   child: Text('Clients'),
@@ -113,7 +152,8 @@ class DashboardPage extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => InternalProfitLogPage()),
+                        builder: (context) => InternalProfitLogPage(),
+                      ),
                     );
                   },
                   child: Text('Internal Profit Log'),
@@ -129,7 +169,9 @@ class DashboardPage extends StatelessWidget {
                     await _auth.signOut();
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => SignInCMS()),
+                      MaterialPageRoute(
+                        builder: (context) => SignInCMS(),
+                      ),
                     );
                   },
                   child: Text('Logout'),
@@ -153,24 +195,19 @@ class DashboardPage extends StatelessWidget {
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Text(
-                          '20 Total Clients',
+                          '$_totalClients Total Clients',
                           style: TextStyle(fontSize: 18),
                         ),
                       ),
                     ),
                     SfCartesianChart(
-                      primaryXAxis: CategoryAxis(),
+                      primaryXAxis: CategoryAxis(
+                        labelPlacement: LabelPlacement.onTicks,
+                      ),
                       title: ChartTitle(text: 'Total Clients'),
                       series: <ChartSeries>[
                         SplineSeries<Data, String>(
-                          dataSource: [
-                            Data('Jan', 35),
-                            Data('Feb', 28),
-                            Data('Mar', 34),
-                            Data('Apr', 32),
-                            Data('May', 40),
-                            Data('Jun', 45),
-                          ],
+                          dataSource: _chartData,
                           xValueMapper: (Data data, _) => data.month,
                           yValueMapper: (Data data, _) => data.value,
                         ),
@@ -192,4 +229,42 @@ class Data {
 
   final String month;
   final double value;
+}
+
+class SignInCMS extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Sign In'),
+      ),
+      body: Center(
+        child: ElevatedButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DashboardPage(),
+              ),
+            );
+          },
+          child: Text('Sign In'),
+        ),
+      ),
+    );
+  }
+}
+
+class InternalProfitLogPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Internal Profit Log'),
+      ),
+      body: Center(
+        child: Text('Internal Profit Log'),
+      ),
+    );
+  }
 }

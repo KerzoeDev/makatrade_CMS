@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 
 class EditProfilePage extends StatefulWidget {
   final DocumentSnapshot client;
@@ -27,9 +28,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
   double? _internalProfit;
   DateTime? _withdrawalDate;
   double? _withdrawalAmount;
+  String? _name;
 
   List<Map<String, dynamic>> profitLogs = [];
   List<Map<String, dynamic>> depositLogs = [];
+  List<Map<String, dynamic>> withdrawalLogs = [];
+  List<Map<String, dynamic>> _internalProfitLogs = [];
 
   @override
   void initState() {
@@ -37,6 +41,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
     nameController = TextEditingController(text: widget.client['name']);
     emailController = TextEditingController(text: widget.client['email']);
     numberController = TextEditingController(text: widget.client['number']);
+
+    _loadDepositLogs();
+    _loadProfitLogs();
+    _loadWithdrawalLogs();
+    _loadInternalProfitLogs();
   }
 
   @override
@@ -60,6 +69,85 @@ class _EditProfilePageState extends State<EditProfilePage> {
         setDate(picked);
       });
     }
+  }
+
+  Future<void> _loadDepositLogs() async {
+    final depositSnapshot =
+        await widget.client.reference.collection('deposits').get();
+
+    setState(() {
+      depositLogs = depositSnapshot.docs.map((doc) {
+        final data = doc.data();
+        final depositDate = (data['depositDate'] as Timestamp).toDate();
+        final formattedDate = DateFormat('yyyy-MM-dd').format(depositDate);
+        return {
+          'depositDate': formattedDate,
+          'depositAmount': data['depositAmount'],
+        };
+      }).toList();
+    });
+  }
+
+  Future<void> _loadInternalProfitLogs() async {
+    final profitSnapshot =
+        await widget.client.reference.collection('profits').get();
+
+    setState(() {
+      _internalProfitLogs = profitSnapshot.docs.map((doc) {
+        final data = doc.data();
+        final toDate = (data['toDate'] as Timestamp).toDate();
+        final internalProfit = data['internalProfit'].toString();
+
+        return {
+          'toDate': toDate,
+          'internalProfit': internalProfit,
+        };
+      }).toList();
+    });
+  }
+
+  Future<void> _loadProfitLogs() async {
+    final profitSnapshot =
+        await widget.client.reference.collection('profits').get();
+
+    setState(() {
+      profitLogs = profitSnapshot.docs.map((doc) {
+        final data = doc.data();
+        final fromDate = (data['fromDate'] as Timestamp).toDate();
+        final toDate = (data['toDate'] as Timestamp).toDate();
+        final formattedFromDate = DateFormat('yyyy-MM-dd').format(fromDate);
+        final formattedToDate = DateFormat('yyyy-MM-dd').format(toDate);
+
+        final profitLog = {
+          'fromDate': formattedFromDate,
+          'toDate': formattedToDate,
+          'profitAmount': data['profitAmount'],
+          'internalProfit': data['internalProfit'],
+        };
+
+        // Add the new profit log to the internal profit logs list
+        _internalProfitLogs.add(profitLog);
+
+        return profitLog;
+      }).toList();
+    });
+  }
+
+  Future<void> _loadWithdrawalLogs() async {
+    final withdrawalSnapshot =
+        await widget.client.reference.collection('withdrawals').get();
+
+    setState(() {
+      withdrawalLogs = withdrawalSnapshot.docs.map((doc) {
+        final data = doc.data();
+        final withdrawalDate = (data['withdrawalDate'] as Timestamp).toDate();
+        final formattedDate = DateFormat('yyyy-MM-dd').format(withdrawalDate);
+        return {
+          'withdrawalDate': formattedDate,
+          'withdrawalAmount': data['withdrawalAmount'],
+        };
+      }).toList();
+    });
   }
 
   @override
@@ -118,6 +206,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     'email': emailController.text,
                     'phoneNumber': numberController.text,
                   });
+                  setState(() {
+                    _name = nameController.text; // Assign the value to _name
+                  });
                 },
                 child: Text('Save Changes'),
               ),
@@ -142,7 +233,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         }),
                         controller: TextEditingController(
                           text: _depositDate != null
-                              ? _depositDate.toString()
+                              ? DateFormat('yyyy-MM-dd').format(_depositDate!)
                               : '',
                         ),
                       ),
@@ -160,7 +251,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         onPressed: () async {
                           if (_depositDate != null && _depositAmount != null) {
                             var depositLog = {
-                              'depositDate': _depositDate,
+                              'depositDate': Timestamp.fromDate(_depositDate!),
                               'depositAmount': _depositAmount,
                             };
                             setState(() {
@@ -179,9 +270,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         itemBuilder: (context, index) {
                           return ListTile(
                             title: Text(
-                                'Date: ${depositLogs[index]['depositDate'].toString()}'),
+                                'Date: ${depositLogs[index]['depositDate']}'),
                             subtitle: Text(
-                                'Amount: R${depositLogs[index]['depositAmount'].toString()}'),
+                                'Amount: R${depositLogs[index]['depositAmount']}'),
                           );
                         },
                       ),
@@ -209,7 +300,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         }),
                         controller: TextEditingController(
                           text: _profitFromDate != null
-                              ? _profitFromDate.toString()
+                              ? DateFormat('yyyy-MM-dd')
+                                  .format(_profitFromDate!)
                               : '',
                         ),
                       ),
@@ -224,7 +316,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         }),
                         controller: TextEditingController(
                           text: _profitToDate != null
-                              ? _profitToDate.toString()
+                              ? DateFormat('yyyy-MM-dd').format(_profitToDate!)
                               : '',
                         ),
                       ),
@@ -235,7 +327,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         ),
                         keyboardType: TextInputType.number,
                         onChanged: (value) {
-                          _profitAmount = double.tryParse(value);
+                          setState(() {
+                            _profitAmount = double.tryParse(value);
+                          });
                         },
                       ),
                       TextField(
@@ -245,7 +339,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         ),
                         keyboardType: TextInputType.number,
                         onChanged: (value) {
-                          _internalProfit = double.tryParse(value);
+                          setState(() {
+                            _internalProfit = double.tryParse(value);
+                          });
                         },
                       ),
                       ElevatedButton(
@@ -254,18 +350,31 @@ class _EditProfilePageState extends State<EditProfilePage> {
                               _profitToDate != null &&
                               _profitAmount != null &&
                               _internalProfit != null) {
+                            var formattedFromDate = DateFormat('yyyy-MM-dd')
+                                .format(_profitFromDate!);
+                            var formattedToDate =
+                                DateFormat('yyyy-MM-dd').format(_profitToDate!);
+
                             var profitLog = {
-                              'fromDate': _profitFromDate,
-                              'toDate': _profitToDate,
+                              'fromDate': Timestamp.fromDate(_profitFromDate!),
+                              'toDate': Timestamp.fromDate(_profitToDate!),
                               'profitAmount': _profitAmount,
                               'internalProfit': _internalProfit,
+                              'userId': widget.client.id,
                             };
                             setState(() {
                               profitLogs.add(profitLog);
                             });
+
                             await widget.client.reference
                                 .collection('profits')
-                                .add(profitLog);
+                                .add({
+                              'fromDate': Timestamp.fromDate(_profitFromDate!),
+                              'toDate': Timestamp.fromDate(_profitToDate!),
+                              'profitAmount': _profitAmount,
+                              'internalProfit': _internalProfit,
+                              'userId': widget.client.id,
+                            });
                           }
                         },
                         child: Text('Add to log'),
@@ -276,9 +385,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         itemBuilder: (context, index) {
                           return ListTile(
                             title: Text(
-                                'From: ${profitLogs[index]['fromDate'].toString()} - To: ${profitLogs[index]['toDate'].toString()}'),
+                                'From: ${profitLogs[index]['fromDate']} - To: ${profitLogs[index]['toDate']}'),
                             subtitle: Text(
-                                'Profit: R${profitLogs[index]['profitAmount'].toString()}'),
+                                'Profit: R${profitLogs[index]['profitAmount']}'),
                           );
                         },
                       ),
@@ -306,7 +415,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         }),
                         controller: TextEditingController(
                           text: _withdrawalDate != null
-                              ? _withdrawalDate.toString()
+                              ? DateFormat('yyyy-MM-dd')
+                                  .format(_withdrawalDate!)
                               : '',
                         ),
                       ),
@@ -324,15 +434,32 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         onPressed: () async {
                           if (_withdrawalDate != null &&
                               _withdrawalAmount != null) {
+                            var withdrawalLog = {
+                              'withdrawalDate':
+                                  Timestamp.fromDate(_withdrawalDate!),
+                              'withdrawalAmount': _withdrawalAmount,
+                            };
+                            setState(() {
+                              withdrawalLogs.add(withdrawalLog);
+                            });
                             await widget.client.reference
                                 .collection('withdrawals')
-                                .add({
-                              'withdrawalDate': _withdrawalDate,
-                              'withdrawalAmount': _withdrawalAmount,
-                            });
+                                .add(withdrawalLog);
                           }
                         },
                         child: Text('Add to log'),
+                      ),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: withdrawalLogs.length,
+                        itemBuilder: (context, index) {
+                          return ListTile(
+                            title: Text(
+                                'Date: ${withdrawalLogs[index]['withdrawalDate']}'),
+                            subtitle: Text(
+                                'Amount: R${withdrawalLogs[index]['withdrawalAmount']}'),
+                          );
+                        },
                       ),
                     ],
                   ),
