@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:makatrading/signin.dart' as SignInPage;
+import 'package:makatrading/clientlist.dart' as ClientListPage;
+import 'package:makatrading/profitlog.dart' as InternalProfitLogPage;
+import 'package:makatrading/main.dart';
+import 'package:makatrading/withdrawalrequests.dart';
 
 class EditProfilePage extends StatefulWidget {
   final DocumentSnapshot client;
@@ -22,6 +27,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late TextEditingController referredByController;
   late TextEditingController affiliatePaymentDateController;
   late TextEditingController affiliateAmountController;
+  late TextEditingController verificationStatusController;
+  late TextEditingController totalReferralsController;
+  late TextEditingController growthPackageController;
 
   DateTime? _depositDate;
   double? _depositAmount;
@@ -41,6 +49,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   DateTime? _affiliatePaymentDate;
   double? _affiliateAmount;
+  String? _verificationStatus;
+  int? _totalReferrals;
+  String? _growthPackage;
 
   @override
   void initState() {
@@ -52,11 +63,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
         TextEditingController(text: widget.client['referredBy']);
     affiliatePaymentDateController = TextEditingController();
     affiliateAmountController = TextEditingController();
+    verificationStatusController = TextEditingController();
+    totalReferralsController = TextEditingController();
+    growthPackageController = TextEditingController();
 
     _loadDepositLogs();
     _loadProfitLogs();
     _loadWithdrawalLogs();
     _loadInternalProfitLogs();
+
+    _verificationStatus = widget.client['verificationStatus'];
+    _totalReferrals = widget.client['totalReferrals'];
+    _growthPackage = widget.client['growthPackage'];
   }
 
   @override
@@ -67,6 +85,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
     referredByController.dispose();
     affiliatePaymentDateController.dispose();
     affiliateAmountController.dispose();
+    verificationStatusController.dispose();
+    totalReferralsController.dispose();
+    growthPackageController.dispose();
     super.dispose();
   }
 
@@ -170,395 +191,583 @@ class _EditProfilePageState extends State<EditProfilePage> {
       appBar: AppBar(
         title: Text('Edit Profile'),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              Text(
-                'Edit Profile',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Full Name',
-                ),
-                controller: nameController,
-              ),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                ),
-                controller: emailController,
-              ),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Phone Number',
-                ),
-                controller: numberController,
-              ),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Verification Status',
-                ),
-              ),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Total Referrals',
-                ),
-              ),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Growth % and Package',
-                ),
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () async {
-                  await widget.client.reference.update({
-                    'name': nameController.text,
-                    'email': emailController.text,
-                    'phoneNumber': numberController.text,
-                  });
-                  setState(() {
-                    _name = nameController.text; // Assign the value to _name
-                  });
-                },
-                child: Text('Save Changes'),
-              ),
-              SizedBox(height: 16),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: <Widget>[
-                      Text(
-                        'Deposit',
-                        style: TextStyle(fontSize: 24),
-                      ),
-                      TextField(
-                        decoration: InputDecoration(
-                          labelText: 'Deposit Date',
-                        ),
-                        onTap: () => _selectDate(context, (date) {
-                          setState(() {
-                            _depositDate = date;
-                          });
-                        }),
-                        controller: TextEditingController(
-                          text: _depositDate != null
-                              ? DateFormat('yyyy-MM-dd').format(_depositDate!)
-                              : '',
-                        ),
-                      ),
-                      TextField(
-                        decoration: InputDecoration(
-                          labelText: 'Deposit Amount',
-                          prefixText: 'R',
-                        ),
-                        keyboardType: TextInputType.number,
-                        onChanged: (value) {
-                          _depositAmount = double.tryParse(value);
-                        },
-                      ),
-                      ElevatedButton(
-                        onPressed: () async {
-                          if (_depositDate != null && _depositAmount != null) {
-                            var depositLog = {
-                              'depositDate': Timestamp.fromDate(_depositDate!),
-                              'depositAmount': _depositAmount,
-                            };
-                            setState(() {
-                              depositLogs.add(depositLog);
-                            });
-                            await widget.client.reference
-                                .collection('deposits')
-                                .add(depositLog);
-                          }
-                        },
-                        child: Text('Add to log'),
-                      ),
-                      ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: depositLogs.length,
-                        itemBuilder: (context, index) {
-                          return ListTile(
-                            title: Text(
-                                'Date: ${depositLogs[index]['depositDate']}'),
-                            subtitle: Text(
-                                'Amount: R${depositLogs[index]['depositAmount']}'),
-                          );
-                        },
-                      ),
-                    ],
+      body: Row(
+        children: [
+          Container(
+            width: 200,
+            color: Colors.white,
+            child: Column(
+              children: [
+                Image.asset('assets/images/makatradinglogo.jpeg'),
+                SizedBox(height: 10),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.white,
+                    onPrimary: Colors.black,
+                    side: BorderSide(color: Colors.blue, width: 2),
                   ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => DashboardPage()),
+                    );
+                  },
+                  child: Text('Dashboard'),
                 ),
-              ),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: <Widget>[
-                      Text(
-                        'Profit',
-                        style: TextStyle(fontSize: 24),
-                      ),
-                      TextField(
-                        decoration: InputDecoration(
-                          labelText: 'From Date',
-                        ),
-                        onTap: () => _selectDate(context, (date) {
-                          setState(() {
-                            _profitFromDate = date;
-                          });
-                        }),
-                        controller: TextEditingController(
-                          text: _profitFromDate != null
-                              ? DateFormat('yyyy-MM-dd')
-                                  .format(_profitFromDate!)
-                              : '',
-                        ),
-                      ),
-                      TextField(
-                        decoration: InputDecoration(
-                          labelText: 'To Date',
-                        ),
-                        onTap: () => _selectDate(context, (date) {
-                          setState(() {
-                            _profitToDate = date;
-                          });
-                        }),
-                        controller: TextEditingController(
-                          text: _profitToDate != null
-                              ? DateFormat('yyyy-MM-dd').format(_profitToDate!)
-                              : '',
-                        ),
-                      ),
-                      TextField(
-                        decoration: InputDecoration(
-                          labelText: 'Profit Amount',
-                          prefixText: 'R',
-                        ),
-                        keyboardType: TextInputType.number,
-                        onChanged: (value) {
-                          setState(() {
-                            _profitAmount = double.tryParse(value);
-                          });
-                        },
-                      ),
-                      TextField(
-                        decoration: InputDecoration(
-                          labelText: 'Internal Profit',
-                          prefixText: 'R',
-                        ),
-                        keyboardType: TextInputType.number,
-                        onChanged: (value) {
-                          setState(() {
-                            _internalProfit = double.tryParse(value);
-                          });
-                        },
-                      ),
-                      ElevatedButton(
-                        onPressed: () async {
-                          if (_profitFromDate != null &&
-                              _profitToDate != null &&
-                              _profitAmount != null &&
-                              _internalProfit != null) {
-                            var formattedFromDate = DateFormat('yyyy-MM-dd')
-                                .format(_profitFromDate!);
-                            var formattedToDate =
-                                DateFormat('yyyy-MM-dd').format(_profitToDate!);
-
-                            var profitLog = {
-                              'fromDate': Timestamp.fromDate(_profitFromDate!),
-                              'toDate': Timestamp.fromDate(_profitToDate!),
-                              'profitAmount': _profitAmount,
-                              'internalProfit': _internalProfit,
-                              'userId': widget.client.id,
-                            };
-                            setState(() {
-                              profitLogs.add(profitLog);
-                            });
-
-                            await widget.client.reference
-                                .collection('profits')
-                                .add({
-                              'fromDate': Timestamp.fromDate(_profitFromDate!),
-                              'toDate': Timestamp.fromDate(_profitToDate!),
-                              'profitAmount': _profitAmount,
-                              'internalProfit': _internalProfit,
-                              'userId': widget.client.id,
-                            });
-                          }
-                        },
-                        child: Text('Add to log'),
-                      ),
-                      ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: profitLogs.length,
-                        itemBuilder: (context, index) {
-                          return ListTile(
-                            title: Text(
-                                'From: ${profitLogs[index]['fromDate']} - To: ${profitLogs[index]['toDate']}'),
-                            subtitle: Text(
-                                'Profit: R${profitLogs[index]['profitAmount']}'),
-                          );
-                        },
-                      ),
-                    ],
+                SizedBox(height: 10),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.white,
+                    onPrimary: Colors.black,
+                    side: BorderSide(color: Colors.blue, width: 2),
                   ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ClientListPage.ClientListPage(),
+                      ),
+                    );
+                  },
+                  child: Text('Clients'),
                 ),
-              ),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: <Widget>[
-                      Text(
-                        'Withdrawal',
-                        style: TextStyle(fontSize: 24),
-                      ),
-                      TextField(
-                        decoration: InputDecoration(
-                          labelText: 'Withdrawal Date',
-                        ),
-                        onTap: () => _selectDate(context, (date) {
-                          setState(() {
-                            _withdrawalDate = date;
-                          });
-                        }),
-                        controller: TextEditingController(
-                          text: _withdrawalDate != null
-                              ? DateFormat('yyyy-MM-dd')
-                                  .format(_withdrawalDate!)
-                              : '',
-                        ),
-                      ),
-                      TextField(
-                        decoration: InputDecoration(
-                          labelText: 'Withdrawal Amount',
-                          prefixText: 'R',
-                        ),
-                        keyboardType: TextInputType.number,
-                        onChanged: (value) {
-                          _withdrawalAmount = double.tryParse(value);
-                        },
-                      ),
-                      ElevatedButton(
-                        onPressed: () async {
-                          if (_withdrawalDate != null &&
-                              _withdrawalAmount != null) {
-                            var withdrawalLog = {
-                              'withdrawalDate':
-                                  Timestamp.fromDate(_withdrawalDate!),
-                              'withdrawalAmount': _withdrawalAmount,
-                            };
-                            setState(() {
-                              withdrawalLogs.add(withdrawalLog);
-                            });
-                            await widget.client.reference
-                                .collection('withdrawals')
-                                .add(withdrawalLog);
-                          }
-                        },
-                        child: Text('Add to log'),
-                      ),
-                      ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: withdrawalLogs.length,
-                        itemBuilder: (context, index) {
-                          return ListTile(
-                            title: Text(
-                                'Date: ${withdrawalLogs[index]['withdrawalDate']}'),
-                            subtitle: Text(
-                                'Amount: R${withdrawalLogs[index]['withdrawalAmount']}'),
-                          );
-                        },
-                      ),
-                    ],
+                SizedBox(height: 10),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.white,
+                    onPrimary: Colors.black,
+                    side: BorderSide(color: Colors.blue, width: 2),
                   ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            InternalProfitLogPage.InternalProfitLogPage(),
+                      ),
+                    );
+                  },
+                  child: Text('Internal Profit Log'),
                 ),
-              ),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: <Widget>[
-                      Text(
-                        'Affiliate Payments',
-                        style: TextStyle(fontSize: 24),
-                      ),
-                      TextField(
-                        decoration: InputDecoration(
-                          labelText: 'Referred By',
-                        ),
-                        controller: referredByController,
-                        enabled: false,
-                      ),
-                      TextField(
-                        decoration: InputDecoration(
-                          labelText: 'Payment Date',
-                        ),
-                        onTap: () => _selectDate(context, (date) {
-                          setState(() {
-                            _affiliatePaymentDate = date;
-                            affiliatePaymentDateController.text =
-                                DateFormat('yyyy-MM-dd').format(date);
-                          });
-                        }),
-                        controller: affiliatePaymentDateController,
-                      ),
-                      TextField(
-                        decoration: InputDecoration(
-                          labelText: 'Payment Amount',
-                          prefixText: 'R',
-                        ),
-                        keyboardType: TextInputType.number,
-                        onChanged: (value) {
-                          _affiliateAmount = double.tryParse(value);
-                        },
-                        controller: affiliateAmountController,
-                      ),
-                      ElevatedButton(
-                        onPressed: () async {
-                          if (_affiliatePaymentDate != null &&
-                              _affiliateAmount != null) {
-                            var affiliatePaymentLog = {
-                              'affiliatePaymentDate':
-                                  Timestamp.fromDate(_affiliatePaymentDate!),
-                              'affiliateAmount': _affiliateAmount,
-                            };
-                            setState(() {
-                              affiliatePayments.add(affiliatePaymentLog);
-                            });
-                            await widget.client.reference
-                                .collection('affiliatePayments')
-                                .add(affiliatePaymentLog);
-                          }
-                        },
-                        child: Text('Add to log'),
-                      ),
-                      ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: affiliatePayments.length,
-                        itemBuilder: (context, index) {
-                          return ListTile(
-                            title: Text(
-                              'Payment Date: ${affiliatePayments[index]['affiliatePaymentDate']}',
-                            ),
-                            subtitle: Text(
-                              'Payment Amount: R${affiliatePayments[index]['affiliateAmount']}',
-                            ),
-                          );
-                        },
-                      ),
-                    ],
+                SizedBox(height: 10),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.white,
+                    onPrimary: Colors.black,
+                    side: BorderSide(color: Colors.blue, width: 2),
                   ),
+                  onPressed: () async {
+                    await _auth.signOut();
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SignInPage.SignInCMS(),
+                      ),
+                    );
+                  },
+                  child: Text('Logout'),
                 ),
-              ),
-            ],
+                SizedBox(height: 10),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.white,
+                    onPrimary: Colors.black,
+                    side: BorderSide(color: Colors.blue, width: 2),
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => WithdrawalRequestsPage(),
+                      ),
+                    );
+                  },
+                  child: Text('Withdrawal Requests'),
+                ),
+              ],
+            ),
           ),
-        ),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    Text(
+                      'Edit Profile',
+                      style:
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                    TextField(
+                      decoration: InputDecoration(
+                        labelText: 'Full Name',
+                      ),
+                      controller: nameController,
+                    ),
+                    TextField(
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                      ),
+                      controller: emailController,
+                    ),
+                    TextField(
+                      decoration: InputDecoration(
+                        labelText: 'Phone Number',
+                      ),
+                      controller: numberController,
+                    ),
+                    TextField(
+                      decoration: InputDecoration(
+                        labelText: 'Verification Status',
+                      ),
+                      controller: verificationStatusController,
+                      onChanged: (value) {
+                        setState(() {
+                          _verificationStatus = value;
+                        });
+                      },
+                    ),
+                    TextField(
+                      decoration: InputDecoration(
+                        labelText: 'Total Referrals',
+                      ),
+                      controller: totalReferralsController,
+                      onChanged: (value) {
+                        setState(() {
+                          _totalReferrals = int.tryParse(value);
+                        });
+                      },
+                    ),
+                    TextField(
+                      decoration: InputDecoration(
+                        labelText: 'Growth % and Package',
+                      ),
+                      controller: growthPackageController,
+                      onChanged: (value) {
+                        setState(() {
+                          _growthPackage = value;
+                        });
+                      },
+                    ),
+                    SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () async {
+                        try {
+                          await widget.client.reference.update({
+                            'name': nameController.text,
+                            'email': emailController.text,
+                            'phoneNumber': numberController.text,
+                            'verificationStatus': _verificationStatus,
+                            'totalReferrals': _totalReferrals,
+                            'growthPackage': _growthPackage,
+                          });
+                          setState(() {
+                            _name = nameController
+                                .text; // Assign the value to _name
+                          });
+                        } catch (e) {
+                          print('Error updating client: $e');
+                        }
+                      },
+                      child: Text('Save Changes'),
+                    ),
+                    SizedBox(height: 16),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: <Widget>[
+                            Text(
+                              'Deposit',
+                              style: TextStyle(fontSize: 24),
+                            ),
+                            TextField(
+                              decoration: InputDecoration(
+                                labelText: 'Deposit Date',
+                              ),
+                              onTap: () => _selectDate(context, (date) {
+                                setState(() {
+                                  _depositDate = date;
+                                });
+                              }),
+                              controller: TextEditingController(
+                                text: _depositDate != null
+                                    ? DateFormat('yyyy-MM-dd')
+                                        .format(_depositDate!)
+                                    : '',
+                              ),
+                            ),
+                            TextField(
+                              decoration: InputDecoration(
+                                labelText: 'Deposit Amount',
+                                prefixText: 'R',
+                              ),
+                              keyboardType: TextInputType.number,
+                              onChanged: (value) {
+                                _depositAmount = double.tryParse(value);
+                              },
+                            ),
+                            ElevatedButton(
+                              onPressed: () async {
+                                try {
+                                  if (_depositDate != null &&
+                                      _depositAmount != null) {
+                                    var depositLog = {
+                                      'depositDate':
+                                          Timestamp.fromDate(_depositDate!),
+                                      'depositAmount': _depositAmount,
+                                    };
+                                    setState(() {
+                                      depositLogs.add(depositLog);
+                                    });
+                                    await widget.client.reference
+                                        .collection('deposits')
+                                        .add(depositLog);
+                                  }
+                                } catch (e) {
+                                  print('Error adding deposit log: $e');
+                                }
+                              },
+                              child: Text('Add to log'),
+                            ),
+                            ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: depositLogs.length,
+                              itemBuilder: (context, index) {
+                                return ListTile(
+                                  title: Text(
+                                      'Date: ${depositLogs[index]['depositDate']}'),
+                                  subtitle: Text(
+                                      'Amount: R${depositLogs[index]['depositAmount']}'),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: <Widget>[
+                            Text(
+                              'Profit',
+                              style: TextStyle(fontSize: 24),
+                            ),
+                            TextField(
+                              decoration: InputDecoration(
+                                labelText: 'From Date',
+                              ),
+                              onTap: () => _selectDate(context, (date) {
+                                setState(() {
+                                  _profitFromDate = date;
+                                });
+                              }),
+                              controller: TextEditingController(
+                                text: _profitFromDate != null
+                                    ? DateFormat('yyyy-MM-dd')
+                                        .format(_profitFromDate!)
+                                    : '',
+                              ),
+                            ),
+                            TextField(
+                              decoration: InputDecoration(
+                                labelText: 'To Date',
+                              ),
+                              onTap: () => _selectDate(context, (date) {
+                                setState(() {
+                                  _profitToDate = date;
+                                });
+                              }),
+                              controller: TextEditingController(
+                                text: _profitToDate != null
+                                    ? DateFormat('yyyy-MM-dd')
+                                        .format(_profitToDate!)
+                                    : '',
+                              ),
+                            ),
+                            TextField(
+                              decoration: InputDecoration(
+                                labelText: 'Profit Amount',
+                                prefixText: 'R',
+                              ),
+                              keyboardType: TextInputType.number,
+                              onChanged: (value) {
+                                setState(() {
+                                  _profitAmount = double.tryParse(value);
+                                });
+                              },
+                            ),
+                            TextField(
+                              decoration: InputDecoration(
+                                labelText: 'Internal Profit',
+                                prefixText: 'R',
+                              ),
+                              keyboardType: TextInputType.number,
+                              onChanged: (value) {
+                                setState(() {
+                                  _internalProfit = double.tryParse(value);
+                                });
+                              },
+                            ),
+                            ElevatedButton(
+                              onPressed: () async {
+                                try {
+                                  if (_profitFromDate != null &&
+                                      _profitToDate != null &&
+                                      _profitAmount != null &&
+                                      _internalProfit != null) {
+                                    var formattedFromDate =
+                                        DateFormat('yyyy-MM-dd')
+                                            .format(_profitFromDate!);
+                                    var formattedToDate =
+                                        DateFormat('yyyy-MM-dd')
+                                            .format(_profitToDate!);
+
+                                    var profitLog = {
+                                      'fromDate':
+                                          Timestamp.fromDate(_profitFromDate!),
+                                      'toDate':
+                                          Timestamp.fromDate(_profitToDate!),
+                                      'profitAmount': _profitAmount,
+                                      'internalProfit': _internalProfit,
+                                      'userId': widget.client.id,
+                                    };
+                                    setState(() {
+                                      profitLogs.add(profitLog);
+                                    });
+
+                                    await widget.client.reference
+                                        .collection('profits')
+                                        .add({
+                                      'fromDate':
+                                          Timestamp.fromDate(_profitFromDate!),
+                                      'toDate':
+                                          Timestamp.fromDate(_profitToDate!),
+                                      'profitAmount': _profitAmount,
+                                      'internalProfit': _internalProfit,
+                                      'userId': widget.client.id,
+                                    });
+                                  }
+                                } catch (e) {
+                                  print('Error adding profit log: $e');
+                                }
+                              },
+                              child: Text('Add to log'),
+                            ),
+                            ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: profitLogs.length,
+                              itemBuilder: (context, index) {
+                                return ListTile(
+                                  title: Text(
+                                      'From: ${profitLogs[index]['fromDate']} - To: ${profitLogs[index]['toDate']}'),
+                                  subtitle: Text(
+                                      'Profit: R${profitLogs[index]['profitAmount']}'),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: <Widget>[
+                            Text(
+                              'Withdrawal',
+                              style: TextStyle(fontSize: 24),
+                            ),
+                            TextField(
+                              decoration: InputDecoration(
+                                labelText: 'Withdrawal Date',
+                              ),
+                              onTap: () => _selectDate(context, (date) {
+                                setState(() {
+                                  _withdrawalDate = date;
+                                });
+                              }),
+                              controller: TextEditingController(
+                                text: _withdrawalDate != null
+                                    ? DateFormat('yyyy-MM-dd')
+                                        .format(_withdrawalDate!)
+                                    : '',
+                              ),
+                            ),
+                            TextField(
+                              decoration: InputDecoration(
+                                labelText: 'Withdrawal Amount',
+                                prefixText: 'R',
+                              ),
+                              keyboardType: TextInputType.number,
+                              onChanged: (value) {
+                                _withdrawalAmount = double.tryParse(value);
+                              },
+                            ),
+                            ElevatedButton(
+                              onPressed: () async {
+                                try {
+                                  if (_withdrawalDate != null &&
+                                      _withdrawalAmount != null) {
+                                    var withdrawalLog = {
+                                      'withdrawalDate':
+                                          Timestamp.fromDate(_withdrawalDate!),
+                                      'withdrawalAmount': _withdrawalAmount,
+                                    };
+                                    setState(() {
+                                      withdrawalLogs.add(withdrawalLog);
+                                    });
+                                    await widget.client.reference
+                                        .collection('withdrawals')
+                                        .add(withdrawalLog);
+                                  }
+                                } catch (e) {
+                                  print('Error adding withdrawal log: $e');
+                                }
+                              },
+                              child: Text('Add to log'),
+                            ),
+                            ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: withdrawalLogs.length,
+                              itemBuilder: (context, index) {
+                                return ListTile(
+                                  title: Text(
+                                      'Date: ${withdrawalLogs[index]['withdrawalDate']}'),
+                                  subtitle: Text(
+                                      'Amount: R${withdrawalLogs[index]['withdrawalAmount']}'),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: <Widget>[
+                            Text(
+                              'Affiliate Payments',
+                              style: TextStyle(fontSize: 24),
+                            ),
+                            TextField(
+                              decoration: InputDecoration(
+                                labelText: 'Referred By',
+                              ),
+                              controller: referredByController,
+                              enabled: false,
+                            ),
+                            TextField(
+                              decoration: InputDecoration(
+                                labelText: 'Payment Date',
+                              ),
+                              onTap: () => _selectDate(context, (date) {
+                                setState(() {
+                                  _affiliatePaymentDate = date;
+                                  affiliatePaymentDateController.text =
+                                      DateFormat('yyyy-MM-dd').format(date);
+                                });
+                              }),
+                              controller: affiliatePaymentDateController,
+                            ),
+                            TextField(
+                              decoration: InputDecoration(
+                                labelText: 'Payment Amount',
+                                prefixText: 'R',
+                              ),
+                              keyboardType: TextInputType.number,
+                              onChanged: (value) {
+                                _affiliateAmount = double.tryParse(value);
+                              },
+                              controller: affiliateAmountController,
+                            ),
+                            ElevatedButton(
+                              onPressed: () async {
+                                try {
+                                  if (_affiliatePaymentDate != null &&
+                                      _affiliateAmount != null) {
+                                    var paymentLog = {
+                                      'paymentDate': Timestamp.fromDate(
+                                          _affiliatePaymentDate!),
+                                      'paymentAmount': _affiliateAmount,
+                                    };
+                                    setState(() {
+                                      affiliatePayments.add(paymentLog);
+                                    });
+                                    await _firestore
+                                        .collection('affiliate_payments')
+                                        .add(paymentLog);
+                                  }
+                                } catch (e) {
+                                  print('Error adding payment log: $e');
+                                }
+                              },
+                              child: Text('Add to log'),
+                            ),
+                            ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: affiliatePayments.length,
+                              itemBuilder: (context, index) {
+                                return ListTile(
+                                  title: Text(
+                                      'Date: ${affiliatePayments[index]['paymentDate']}'),
+                                  subtitle: Text(
+                                      'Amount: R${affiliatePayments[index]['paymentAmount']}'),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () async {
+                        try {
+                          await showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: Text('Confirmation'),
+                                content: Text(
+                                    'Are you sure you want to delete this client?'),
+                                actions: <Widget>[
+                                  TextButton(
+                                    onPressed: () async {
+                                      await widget.client.reference.delete();
+                                      Navigator.pop(context);
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text('Delete'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text('Cancel'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        } catch (e) {
+                          print('Error deleting client: $e');
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(primary: Colors.red),
+                      child: Text('Delete Client'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

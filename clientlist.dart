@@ -56,13 +56,14 @@ class _ClientListPageState extends State<ClientListPage> {
   }
 
   Future<void> _addNewClient() async {
-    // Navigate to the SignUpPage to add a new client
     final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => SignUpPage()),
     );
-    if (result != null && result is Map<String, dynamic>) {
-      // New client added, refresh the client list
+
+    if (result != null &&
+        result is Map<String, dynamic> &&
+        result['result'] == 'success') {
       _clients.clear();
       _lastDocument = null;
       _allClientsLoaded = false;
@@ -250,6 +251,13 @@ class _ClientListPageState extends State<ClientListPage> {
                                   title: Text('Delete Client'),
                                 ),
                               ),
+                              PopupMenuItem<String>(
+                                value: 'details',
+                                child: ListTile(
+                                  leading: Icon(Icons.info),
+                                  title: Text('Client Details'),
+                                ),
+                              ),
                             ],
                             onSelected: (String value) {
                               if (value == 'delete') {
@@ -284,6 +292,36 @@ class _ClientListPageState extends State<ClientListPage> {
                                     builder: (context) =>
                                         EditProfilePage(client: client),
                                   ),
+                                );
+                              } else if (value == 'details') {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      title: Text('Client Details'),
+                                      content: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text('Name: ${client['name']}'),
+                                          Text('Email: ${client['email']}'),
+                                          Text('Phone: ${client['number']}'),
+                                          Text(
+                                              'Referred By: ${client['referredBy']}'),
+                                          Text('User ID: ${client['userId']}'),
+                                        ],
+                                      ),
+                                      actions: <Widget>[
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                          child: Text('Close'),
+                                        ),
+                                      ],
+                                    );
+                                  },
                                 );
                               }
                             },

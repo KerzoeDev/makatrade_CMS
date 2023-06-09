@@ -275,6 +275,9 @@ class _DashboardPageState extends State<DashboardPage> {
                           dataSource: _chartData,
                           xValueMapper: (Data data, _) => data.month,
                           yValueMapper: (Data data, _) => data.value,
+                          splineType: SplineType.natural, // Add this line
+                          markerSettings:
+                              MarkerSettings(isVisible: true), // Add this line
                         ),
                       ],
                     )
