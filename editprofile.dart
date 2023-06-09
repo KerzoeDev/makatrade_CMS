@@ -72,9 +72,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _loadWithdrawalLogs();
     _loadInternalProfitLogs();
 
-    _verificationStatus = widget.client['verificationStatus'];
-    _totalReferrals = widget.client['totalReferrals'];
-    _growthPackage = widget.client['growthPackage'];
+    _verificationStatus =
+        (widget.client.data() as Map<String, dynamic>)['verificationStatus'] ??
+            '';
+    _totalReferrals =
+        (widget.client.data() as Map<String, dynamic>)['totalReferrals'] ?? 0;
+    _growthPackage =
+        (widget.client.data() as Map<String, dynamic>)['growthPackage'] ?? '';
   }
 
   @override

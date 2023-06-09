@@ -124,18 +124,13 @@ class _DashboardPageState extends State<DashboardPage> {
       _totalClients = usersSnapshot.docs.length;
     });
 
-    final monthlyUsersSnapshot =
-        await _firestore.collection('monthly_users').get();
-
     setState(() {
       _chartData = allMonths.map((month) {
-        final doc = monthlyUsersSnapshot.docs
-            .where((doc) => doc.id == month)
-            .firstOrNull;
+        final count = usersSnapshot.docs
+            .where((doc) => doc.data()['signUpMonth'] == month)
+            .length;
 
-        final value = doc?.data()['count']?.toDouble() ?? 0.0;
-
-        return Data(month, value);
+        return Data(month, count.toDouble());
       }).toList();
     });
   }
@@ -275,9 +270,10 @@ class _DashboardPageState extends State<DashboardPage> {
                           dataSource: _chartData,
                           xValueMapper: (Data data, _) => data.month,
                           yValueMapper: (Data data, _) => data.value,
-                          splineType: SplineType.natural, // Add this line
-                          markerSettings:
-                              MarkerSettings(isVisible: true), // Add this line
+                          splineType: SplineType.natural,
+                          width: 2,
+                          color: Colors.blue,
+                          markerSettings: MarkerSettings(isVisible: true),
                         ),
                       ],
                     )
