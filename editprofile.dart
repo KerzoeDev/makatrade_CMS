@@ -19,6 +19,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late TextEditingController nameController;
   late TextEditingController emailController;
   late TextEditingController numberController;
+  late TextEditingController referredByController;
+  late TextEditingController affiliatePaymentDateController;
+  late TextEditingController affiliateAmountController;
 
   DateTime? _depositDate;
   double? _depositAmount;
@@ -34,6 +37,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
   List<Map<String, dynamic>> depositLogs = [];
   List<Map<String, dynamic>> withdrawalLogs = [];
   List<Map<String, dynamic>> _internalProfitLogs = [];
+  List<Map<String, dynamic>> affiliatePayments = [];
+
+  DateTime? _affiliatePaymentDate;
+  double? _affiliateAmount;
 
   @override
   void initState() {
@@ -41,6 +48,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
     nameController = TextEditingController(text: widget.client['name']);
     emailController = TextEditingController(text: widget.client['email']);
     numberController = TextEditingController(text: widget.client['number']);
+    referredByController =
+        TextEditingController(text: widget.client['referredBy']);
+    affiliatePaymentDateController = TextEditingController();
+    affiliateAmountController = TextEditingController();
 
     _loadDepositLogs();
     _loadProfitLogs();
@@ -53,6 +64,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
     nameController.dispose();
     emailController.dispose();
     numberController.dispose();
+    referredByController.dispose();
+    affiliatePaymentDateController.dispose();
+    affiliateAmountController.dispose();
     super.dispose();
   }
 
@@ -458,6 +472,83 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                 'Date: ${withdrawalLogs[index]['withdrawalDate']}'),
                             subtitle: Text(
                                 'Amount: R${withdrawalLogs[index]['withdrawalAmount']}'),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: <Widget>[
+                      Text(
+                        'Affiliate Payments',
+                        style: TextStyle(fontSize: 24),
+                      ),
+                      TextField(
+                        decoration: InputDecoration(
+                          labelText: 'Referred By',
+                        ),
+                        controller: referredByController,
+                        enabled: false,
+                      ),
+                      TextField(
+                        decoration: InputDecoration(
+                          labelText: 'Payment Date',
+                        ),
+                        onTap: () => _selectDate(context, (date) {
+                          setState(() {
+                            _affiliatePaymentDate = date;
+                            affiliatePaymentDateController.text =
+                                DateFormat('yyyy-MM-dd').format(date);
+                          });
+                        }),
+                        controller: affiliatePaymentDateController,
+                      ),
+                      TextField(
+                        decoration: InputDecoration(
+                          labelText: 'Payment Amount',
+                          prefixText: 'R',
+                        ),
+                        keyboardType: TextInputType.number,
+                        onChanged: (value) {
+                          _affiliateAmount = double.tryParse(value);
+                        },
+                        controller: affiliateAmountController,
+                      ),
+                      ElevatedButton(
+                        onPressed: () async {
+                          if (_affiliatePaymentDate != null &&
+                              _affiliateAmount != null) {
+                            var affiliatePaymentLog = {
+                              'affiliatePaymentDate':
+                                  Timestamp.fromDate(_affiliatePaymentDate!),
+                              'affiliateAmount': _affiliateAmount,
+                            };
+                            setState(() {
+                              affiliatePayments.add(affiliatePaymentLog);
+                            });
+                            await widget.client.reference
+                                .collection('affiliatePayments')
+                                .add(affiliatePaymentLog);
+                          }
+                        },
+                        child: Text('Add to log'),
+                      ),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: affiliatePayments.length,
+                        itemBuilder: (context, index) {
+                          return ListTile(
+                            title: Text(
+                              'Payment Date: ${affiliatePayments[index]['affiliatePaymentDate']}',
+                            ),
+                            subtitle: Text(
+                              'Payment Amount: R${affiliatePayments[index]['affiliateAmount']}',
+                            ),
                           );
                         },
                       ),

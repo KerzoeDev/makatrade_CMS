@@ -10,6 +10,7 @@ import 'package:makatrading/clientlist.dart' as ClientListPage;
 import 'package:makatrading/profitlog.dart' as InternalProfitLogPage;
 import 'package:syncfusion_flutter_charts/sparkcharts.dart';
 import 'package:async/async.dart';
+import 'package:makatrading/withdrawalrequests.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -217,6 +218,23 @@ class _DashboardPageState extends State<DashboardPage> {
                     );
                   },
                   child: Text('Logout'),
+                ),
+                SizedBox(height: 10),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.white,
+                    onPrimary: Colors.black,
+                    side: BorderSide(color: Colors.blue, width: 2),
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => WithdrawalRequestsPage(),
+                      ),
+                    );
+                  },
+                  child: Text('Withdrawal Requests'),
                 ),
               ],
             ),
