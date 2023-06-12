@@ -52,7 +52,7 @@ class _SignUpPageState extends State<SignUpPage> {
             'referredBy': _referredBy,
           });
           // Increment the user count for the respective month
-          String currentMonth = DateFormat('MMMM').format(DateTime.now());
+          String currentMonth = DateFormat('yyyy-MM').format(DateTime.now());
           DocumentReference monthDocRef =
               _firestore.collection('monthly_users').doc(currentMonth);
 

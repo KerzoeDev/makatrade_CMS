@@ -204,45 +204,32 @@ class _EditProfilePageState extends State<EditProfilePage> {
               children: [
                 Image.asset('assets/images/makatradinglogo.jpeg'),
                 SizedBox(height: 10),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    primary: Colors.white,
-                    onPrimary: Colors.black,
-                    side: BorderSide(color: Colors.blue, width: 2),
-                  ),
-                  onPressed: () {
+                ListTile(
+                  leading: Icon(Icons.dashboard),
+                  title: Text('Dashboard'),
+                  onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => DashboardPage()),
                     );
                   },
-                  child: Text('Dashboard'),
                 ),
-                SizedBox(height: 10),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    primary: Colors.white,
-                    onPrimary: Colors.black,
-                    side: BorderSide(color: Colors.blue, width: 2),
-                  ),
-                  onPressed: () {
+                ListTile(
+                  leading: Icon(Icons.group),
+                  title: Text('Clients'),
+                  onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ClientListPage.ClientListPage(),
-                      ),
+                          builder: (context) =>
+                              ClientListPage.ClientListPage()),
                     );
                   },
-                  child: Text('Clients'),
                 ),
-                SizedBox(height: 10),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    primary: Colors.white,
-                    onPrimary: Colors.black,
-                    side: BorderSide(color: Colors.blue, width: 2),
-                  ),
-                  onPressed: () {
+                ListTile(
+                  leading: Icon(Icons.receipt_long),
+                  title: Text('Internal Profit Log'),
+                  onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -251,16 +238,23 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       ),
                     );
                   },
-                  child: Text('Internal Profit Log'),
                 ),
-                SizedBox(height: 10),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    primary: Colors.white,
-                    onPrimary: Colors.black,
-                    side: BorderSide(color: Colors.blue, width: 2),
-                  ),
-                  onPressed: () async {
+                ListTile(
+                  leading: Icon(Icons.money),
+                  title: Text('Withdrawal Requests'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => WithdrawalRequestsPage(),
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.exit_to_app),
+                  title: Text('Logout'),
+                  onTap: () async {
                     await _auth.signOut();
                     Navigator.pushReplacement(
                       context,
@@ -269,24 +263,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       ),
                     );
                   },
-                  child: Text('Logout'),
-                ),
-                SizedBox(height: 10),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    primary: Colors.white,
-                    onPrimary: Colors.black,
-                    side: BorderSide(color: Colors.blue, width: 2),
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => WithdrawalRequestsPage(),
-                      ),
-                    );
-                  },
-                  child: Text('Withdrawal Requests'),
                 ),
               ],
             ),

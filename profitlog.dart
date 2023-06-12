@@ -6,6 +6,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:makatrading/clientlist.dart' as ClientListPage;
 import 'package:async/async.dart';
 import 'package:intl/intl.dart';
+import 'package:makatrading/withdrawalrequests.dart';
+import 'package:makatrading/signin.dart' as SignInPage;
 
 class InternalProfitLogPage extends StatefulWidget {
   @override
@@ -67,25 +69,26 @@ class _InternalProfitLogPageState extends State<InternalProfitLogPage> {
         children: [
           Container(
             width: 200,
-            color: Colors.blue,
+            color: Colors.white,
             child: Column(
               children: [
                 Image.asset('assets/images/makatradinglogo.jpeg'),
-                Text('MakaTrade'),
                 SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: () {
+                ListTile(
+                  leading: Icon(Icons.dashboard),
+                  title: Text('Dashboard'),
+                  onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                           builder: (context) => DashboardPage.DashboardPage()),
                     );
                   },
-                  child: Text('Dashboard'),
                 ),
-                SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: () {
+                ListTile(
+                  leading: Icon(Icons.group),
+                  title: Text('Clients'),
+                  onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -93,30 +96,43 @@ class _InternalProfitLogPageState extends State<InternalProfitLogPage> {
                               ClientListPage.ClientListPage()),
                     );
                   },
-                  child: Text('Clients'),
                 ),
-                SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: () {
+                ListTile(
+                  leading: Icon(Icons.receipt_long),
+                  title: Text('Internal Profit Log'),
+                  onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => InternalProfitLogPage()),
+                        builder: (context) => InternalProfitLogPage(),
+                      ),
                     );
                   },
-                  child: Text('Internal Profit Log'),
                 ),
-                SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: () async {
+                ListTile(
+                  leading: Icon(Icons.money),
+                  title: Text('Withdrawal Requests'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => WithdrawalRequestsPage(),
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.exit_to_app),
+                  title: Text('Logout'),
+                  onTap: () async {
                     await _auth.signOut();
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => InternalProfitLogPage()),
+                        builder: (context) => SignInPage.SignInCMS(),
+                      ),
                     );
                   },
-                  child: Text('Logout'),
                 ),
               ],
             ),

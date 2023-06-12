@@ -34,24 +34,9 @@ void main() async {
 class Data {
   Data(this.month, this.value);
 
-  final String month;
+  final DateTime month;
   final double value;
 }
-
-List<String> categoryNames = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December'
-];
 
 class App extends StatelessWidget {
   final Future<FirebaseApp> _initialization = Firebase.initializeApp();
@@ -118,20 +103,44 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Future<void> _loadUserData() async {
-    final usersSnapshot = await _firestore.collection('users').get();
+    _chartData = [];
+
+    final QuerySnapshot snapshot = await _firestore
+        .collection('monthly_users')
+        .orderBy(FieldPath.documentId)
+        .get();
+
+    if (snapshot.docs.isEmpty) {
+      print('No data found in monthly_users collection');
+      return;
+    }
+
+    for (final doc in snapshot.docs) {
+      final data = doc.data() as Map<String, dynamic>;
+
+      if (!data.containsKey('count')) {
+        print('count field not found in the document');
+        continue;
+      }
+
+      final count = data['count'] ?? 0;
+
+      if (doc.id.length != 7 || !doc.id.contains('-')) {
+        print('Document ID is not in expected format YYYY-MM');
+        continue;
+      }
+
+      final yearMonth = doc.id.split('-');
+      final date = DateTime(int.parse(yearMonth[0]), int.parse(yearMonth[1]));
+      _chartData.add(Data(date, count.toDouble()));
+
+      // print the data for debugging
+      print('Added data: ${date.toString()}, ${count.toDouble()}');
+    }
 
     setState(() {
-      _totalClients = usersSnapshot.docs.length;
-    });
-
-    setState(() {
-      _chartData = allMonths.map((month) {
-        final count = usersSnapshot.docs
-            .where((doc) => doc.data()['signUpMonth'] == month)
-            .length;
-
-        return Data(month, count.toDouble());
-      }).toList();
+      _totalClients =
+          _chartData.map((data) => data.value.toInt()).reduce((a, b) => a + b);
     });
   }
 
@@ -147,45 +156,32 @@ class _DashboardPageState extends State<DashboardPage> {
               children: [
                 Image.asset('assets/images/makatradinglogo.jpeg'),
                 SizedBox(height: 10),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    primary: Colors.white,
-                    onPrimary: Colors.black,
-                    side: BorderSide(color: Colors.blue, width: 2),
-                  ),
-                  onPressed: () {
+                ListTile(
+                  leading: Icon(Icons.dashboard),
+                  title: Text('Dashboard'),
+                  onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => DashboardPage()),
                     );
                   },
-                  child: Text('Dashboard'),
                 ),
-                SizedBox(height: 10),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    primary: Colors.white,
-                    onPrimary: Colors.black,
-                    side: BorderSide(color: Colors.blue, width: 2),
-                  ),
-                  onPressed: () {
+                ListTile(
+                  leading: Icon(Icons.group),
+                  title: Text('Clients'),
+                  onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ClientListPage.ClientListPage(),
-                      ),
+                          builder: (context) =>
+                              ClientListPage.ClientListPage()),
                     );
                   },
-                  child: Text('Clients'),
                 ),
-                SizedBox(height: 10),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    primary: Colors.white,
-                    onPrimary: Colors.black,
-                    side: BorderSide(color: Colors.blue, width: 2),
-                  ),
-                  onPressed: () {
+                ListTile(
+                  leading: Icon(Icons.receipt_long),
+                  title: Text('Internal Profit Log'),
+                  onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -194,16 +190,23 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                     );
                   },
-                  child: Text('Internal Profit Log'),
                 ),
-                SizedBox(height: 10),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    primary: Colors.white,
-                    onPrimary: Colors.black,
-                    side: BorderSide(color: Colors.blue, width: 2),
-                  ),
-                  onPressed: () async {
+                ListTile(
+                  leading: Icon(Icons.money),
+                  title: Text('Withdrawal Requests'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => WithdrawalRequestsPage(),
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.exit_to_app),
+                  title: Text('Logout'),
+                  onTap: () async {
                     await _auth.signOut();
                     Navigator.pushReplacement(
                       context,
@@ -212,24 +215,6 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                     );
                   },
-                  child: Text('Logout'),
-                ),
-                SizedBox(height: 10),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    primary: Colors.white,
-                    onPrimary: Colors.black,
-                    side: BorderSide(color: Colors.blue, width: 2),
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => WithdrawalRequestsPage(),
-                      ),
-                    );
-                  },
-                  child: Text('Withdrawal Requests'),
                 ),
               ],
             ),
@@ -256,24 +241,25 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                     ),
                     SfCartesianChart(
-                      primaryXAxis: CategoryAxis(
-                        labelPlacement: LabelPlacement.onTicks,
-                        title: AxisTitle(text: 'Months'),
+                      primaryXAxis: DateTimeAxis(
+                        dateFormat: DateFormat('MMM'),
+                        intervalType: DateTimeIntervalType.months,
+                        majorGridLines: MajorGridLines(width: 0),
                       ),
                       primaryYAxis: NumericAxis(
                         numberFormat: NumberFormat('#,##0'),
                         labelIntersectAction: AxisLabelIntersectAction.hide,
-                        title: AxisTitle(text: 'Total Clients'),
+                        majorGridLines: MajorGridLines(width: 0),
                       ),
                       series: <ChartSeries>[
-                        SplineSeries<Data, String>(
+                        LineSeries<Data, DateTime>(
                           dataSource: _chartData,
                           xValueMapper: (Data data, _) => data.month,
                           yValueMapper: (Data data, _) => data.value,
-                          splineType: SplineType.natural,
-                          width: 2,
-                          color: Colors.blue,
-                          markerSettings: MarkerSettings(isVisible: true),
+                          width: 2, // Adjust the width of the spline line
+                          color: Colors
+                              .blue, // Change the color of the spline line
+                          markerSettings: MarkerSettings(isVisible: false),
                         ),
                       ],
                     )
